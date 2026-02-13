@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABCEL San Antonio - Guía Técnica</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+            background: #fff;
+        }
+        h1 { color: #00C853; border-bottom: 3px solid #00C853; padding-bottom: 10px; }
+        h2 { color: #1a1a1a; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 40px; }
+        h3 { color: #444; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+        }
+        pre {
+            background: #1e1e2e;
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #00C853;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        blockquote {
+            border-left: 4px solid #00C853;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #f9f9f9;
+        }
+        .toc { background: #f4f4f4; padding: 20px; border-radius: 8px; }
+        @media print {
+            body { max-width: 100%; padding: 20px; }
+            pre { white-space: pre-wrap; word-wrap: break-word; }
+        }
+    </style>
+</head>
+<body>
+<h1 id="labcel-san-antonio-guia-tecnica-completa">📱 LABCEL San Antonio - Guía Técnica Completa</h1>
+<h2 id="documentacion-de-arquitectura-y-funcionamiento">Documentación de Arquitectura y Funcionamiento</h2>
+<hr />
+<h1 id="indice">ÍNDICE</h1>
+<ol>
+<li><a href="#1-arquitectura-general">Arquitectura General</a></li>
+<li><a href="#2-estructura-de-archivos">Estructura de Archivos</a></li>
+<li><a href="#3-backend-fastapi--mongodb">Backend (FastAPI + MongoDB)</a></li>
+<li><a href="#4-frontend-react--tailwind">Frontend (React + Tailwind)</a></li>
+<li><a href="#5-flujo-de-datos">Flujo de Datos</a></li>
+<li><a href="#6-base-de-datos">Base de Datos</a></li>
+<li><a href="#7-autenticación">Autenticación</a></li>
+<li><a href="#8-api-endpoints">API Endpoints</a></li>
+<li><a href="#9-componentes-ui">Componentes UI</a></li>
+<li><a href="#10-despliegue">Despliegue</a></li>
+</ol>
+<hr />
+<h1 id="1-arquitectura-general">1. ARQUITECTURA GENERAL</h1>
+<pre><code>┌─────────────────┐     HTTP/REST     ┌─────────────────┐     MongoDB     ┌─────────────────┐
+│                 │    ◄──────────►   │                 │   ◄──────────►  │                 │
+│    FRONTEND     │                   │     BACKEND     │                 │    DATABASE     │
+│   React:3000    │                   │   FastAPI:8001  │                 │   MongoDB:27017 │
+│                 │                   │                 │                 │                 │
+└─────────────────┘                   └─────────────────┘                 └─────────────────┘
+        │                                     │
+        │                                     │
+        ▼                                     ▼
+   Tailwind CSS                         Motor (async)
+   Shadcn UI                            Pydantic
+   React Router                         Python-Jose
+</code></pre>
+<h2 id="tecnologias-principales">Tecnologías Principales</h2>
+<table>
+<thead>
+<tr>
+<th>Capa</th>
+<th>Tecnología</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React 19</td>
+<td>Interfaz de usuario</td>
+</tr>
+<tr>
+<td>Estilos</td>
+<td>Tailwind CSS</td>
+<td>Framework CSS utilitario</td>
+</tr>
+<tr>
+<td>Componentes</td>
+<td>Shadcn UI (Radix)</td>
+<td>Componentes accesibles</td>
+</tr>
+<tr>
+<td>Routing</td>
+<td>React Router DOM</td>
+<td>Navegación SPA</td>
+</tr>
+<tr>
+<td>HTTP Client</td>
+<td>Axios</td>
+<td>Comunicación con API</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>FastAPI</td>
+<td>Framework API Python</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MongoDB</td>
+<td>Base de datos NoSQL</td>
+</tr>
+<tr>
+<td>Driver DB</td>
+<td>Motor</td>
+<td>Driver async MongoDB</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Google OAuth</td>
+<td>Autenticación social</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="2-estructura-de-archivos">2. ESTRUCTURA DE ARCHIVOS</h1>
+<pre><code>labcel-san-antonio/
+│
+├── backend/                    # ══════ SERVIDOR API ══════
+│   ├── server.py              # Archivo principal del backend
+│   ├── requirements.txt       # Dependencias Python
+│   └── .env                   # Variables de entorno
+│
+├── frontend/                   # ══════ APLICACIÓN WEB ══════
+│   ├── public/
+│   │   └── index.html         # HTML base
+│   │
+│   ├── src/
+│   │   ├── index.js           # Punto de entrada React
+│   │   ├── index.css          # Estilos globales + Tailwind
+│   │   ├── App.js             # Componente raíz + Router
+│   │   ├── App.css            # Estilos adicionales
+│   │   │
+│   │   ├── components/        # Componentes reutilizables
+│   │   │   ├── Navbar.js      # Barra de navegación
+│   │   │   ├── Footer.js      # Pie de página
+│   │   │   ├── AuthCallback.js    # Manejo OAuth
+│   │   │   ├── ProtectedRoute.js  # Rutas protegidas
+│   │   │   ├── AdminLayout.js     # Layout panel admin
+│   │   │   └── ui/            # Componentes Shadcn
+│   │   │       ├── button.jsx
+│   │   │       ├── input.jsx
+│   │   │       ├── dialog.jsx
+│   │   │       ├── select.jsx
+│   │   │       ├── slider.jsx
+│   │   │       └── ... (30+ componentes)
+│   │   │
+│   │   ├── pages/             # Páginas de la aplicación
+│   │   │   ├── Home.js        # Página principal
+│   │   │   ├── Catalog.js     # Catálogo de productos
+│   │   │   ├── Customizer.js  # Personalizador de fundas
+│   │   │   ├── Cart.js        # Carrito de compras
+│   │   │   ├── Checkout.js    # Proceso de compra
+│   │   │   ├── TrackOrder.js  # Rastreo de pedidos
+│   │   │   ├── MyOrders.js    # Mis pedidos (usuario)
+│   │   │   ├── Terms.js       # Términos y condiciones
+│   │   │   ├── Privacy.js     # Política de privacidad
+│   │   │   └── admin/         # Panel de administración
+│   │   │       ├── Dashboard.js   # Dashboard admin
+│   │   │       ├── Products.js    # Gestión productos
+│   │   │       ├── Orders.js      # Gestión pedidos
+│   │   │       └── Users.js       # Gestión usuarios
+│   │   │
+│   │   └── context/           # Estado global React
+│   │       ├── AuthContext.js # Contexto autenticación
+│   │       └── CartContext.js # Contexto carrito
+│   │
+│   ├── package.json           # Dependencias Node.js
+│   ├── tailwind.config.js     # Configuración Tailwind
+│   └── .env                   # Variables de entorno
+│
+└── memory/
+    └── PRD.md                 # Documento de requerimientos
+</code></pre>
+<hr />
+<h1 id="3-backend-fastapi-mongodb">3. BACKEND (FastAPI + MongoDB)</h1>
+<h2 id="31-archivo-principal-serverpy">3.1 Archivo Principal: <code>server.py</code></h2>
+<h3 id="estructura-del-codigo">Estructura del Código</h3>
+<pre><code class="language-python"># ══════════════════════════════════════════════════════════════
+# SECCIÓN 1: IMPORTS Y CONFIGURACIÓN
+# ══════════════════════════════════════════════════════════════
+
+from fastapi import FastAPI, APIRouter, HTTPException, ...
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
+
+# Conexión MongoDB
+mongo_url = os.environ['MONGO_URL']
+client = AsyncIOMotorClient(mongo_url)
+db = client[os.environ['DB_NAME']]
+
+# Crear aplicación FastAPI
+app = FastAPI(title=&quot;LABCEL San Antonio API&quot;)
+api_router = APIRouter(prefix=&quot;/api&quot;)
+</code></pre>
+<h3 id="seccion-de-modelos-pydantic">Sección de Modelos Pydantic</h3>
+<pre><code class="language-python"># ══════════════════════════════════════════════════════════════
+# SECCIÓN 2: MODELOS DE DATOS (Pydantic)
+# ══════════════════════════════════════════════════════════════
+
+class User(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    role: str = &quot;customer&quot;  # customer, admin
+    phone: Optional[str] = None
+    whatsapp_number: Optional[str] = None
+    created_at: datetime
+
+class Product(BaseModel):
+    product_id: str
+    name: str
+    description: str
+    price: float
+    category: str = &quot;funda&quot;
+    base_image_url: Optional[str] = None
+    is_customizable: bool = True
+    is_active: bool = True
+    stock: int = 100
+
+class CartItem(BaseModel):
+    product_id: str
+    product_name: str
+    quantity: int
+    price: float
+    phone_brand: Optional[str] = None
+    phone_model: Optional[str] = None
+    custom_image_url: Optional[str] = None
+    preview_image_url: Optional[str] = None
+
+class Order(BaseModel):
+    order_id: str
+    user_id: Optional[str] = None
+    items: List[CartItem]
+    customer_name: str
+    customer_email: str
+    customer_phone: str
+    shipping_address: str
+    payment_method: str  # transferencia, recoger_tienda
+    status: str = &quot;pendiente&quot;
+    status_history: List[Dict]
+    total: float
+</code></pre>
+<h3 id="seccion-de-autenticacion">Sección de Autenticación</h3>
+<pre><code class="language-python"># ══════════════════════════════════════════════════════════════
+# SECCIÓN 3: HELPERS DE AUTENTICACIÓN
+# ══════════════════════════════════════════════════════════════
+
+async def get_current_user(request: Request) -&gt; Optional[Dict]:
+    &quot;&quot;&quot;Obtiene usuario actual desde cookie o header&quot;&quot;&quot;
+    session_token = request.cookies.get(&quot;session_token&quot;)
+    if not session_token:
+        auth_header = request.headers.get(&quot;Authorization&quot;)
+        if auth_header and auth_header.startswith(&quot;Bearer &quot;):
+            session_token = auth_header.split(&quot; &quot;)[1]
+
+    if not session_token:
+        return None
+
+    session = await get_session_from_token(session_token)
+    if not session:
+        return None
+
+    user = await db.users.find_one(
+        {&quot;user_id&quot;: session[&quot;user_id&quot;]},
+        {&quot;_id&quot;: 0}  # Excluir _id de MongoDB
+    )
+    return user
+
+async def require_admin(request: Request) -&gt; Dict:
+    &quot;&quot;&quot;Requiere rol de administrador&quot;&quot;&quot;
+    user = await require_auth(request)
+    if user.get(&quot;role&quot;) != &quot;admin&quot;:
+        raise HTTPException(status_code=403, detail=&quot;Acceso denegado&quot;)
+    return user
+</code></pre>
+<h3 id="seccion-de-rutas-api">Sección de Rutas API</h3>
+<pre><code class="language-python"># ══════════════════════════════════════════════════════════════
+# SECCIÓN 4: RUTAS DE LA API
+# ══════════════════════════════════════════════════════════════
+
+# --- Autenticación ---
+@api_router.post(&quot;/auth/session&quot;)      # Intercambiar session_id por datos
+@api_router.get(&quot;/auth/me&quot;)            # Obtener usuario actual
+@api_router.post(&quot;/auth/logout&quot;)       # Cerrar sesión
+
+# --- Productos ---
+@api_router.get(&quot;/products&quot;)           # Listar productos
+@api_router.get(&quot;/products/{id}&quot;)      # Obtener producto
+@api_router.post(&quot;/products&quot;)          # Crear producto (admin)
+@api_router.put(&quot;/products/{id}&quot;)      # Actualizar producto (admin)
+@api_router.delete(&quot;/products/{id}&quot;)   # Eliminar producto (admin)
+
+# --- Teléfonos ---
+@api_router.get(&quot;/phone-brands&quot;)       # Listar marcas
+@api_router.get(&quot;/phone-models&quot;)       # Listar modelos
+
+# --- Pedidos ---
+@api_router.post(&quot;/orders&quot;)            # Crear pedido
+@api_router.get(&quot;/orders&quot;)             # Listar pedidos
+@api_router.get(&quot;/orders/{id}&quot;)        # Obtener pedido
+@api_router.get(&quot;/orders/track/{id}&quot;)  # Rastrear pedido (público)
+@api_router.put(&quot;/orders/{id}/status&quot;) # Actualizar estado (admin)
+
+# --- Usuarios ---
+@api_router.get(&quot;/users&quot;)              # Listar usuarios (admin)
+@api_router.put(&quot;/users/{id}/role&quot;)    # Cambiar rol (admin)
+
+# --- Upload ---
+@api_router.post(&quot;/upload/image&quot;)      # Subir imagen
+
+# --- Admin ---
+@api_router.get(&quot;/admin/stats&quot;)        # Estadísticas (admin)
+</code></pre>
+<h2 id="32-variables-de-entorno-env">3.2 Variables de Entorno: <code>.env</code></h2>
+<pre><code class="language-env"># Conexión a MongoDB
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=labcel_db
+
+# (Opcional) Para notificaciones
+TWILIO_ACCOUNT_SID=tu_account_sid
+TWILIO_AUTH_TOKEN=tu_auth_token
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+
+RESEND_API_KEY=re_xxxxx
+SENDER_EMAIL=tu@email.com
+</code></pre>
+<hr />
+<h1 id="4-frontend-react-tailwind">4. FRONTEND (React + Tailwind)</h1>
+<h2 id="41-punto-de-entrada-indexjs">4.1 Punto de Entrada: <code>index.js</code></h2>
+<pre><code class="language-javascript">import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';  // Estilos globales + Tailwind
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  &lt;React.StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/React.StrictMode&gt;
+);
+</code></pre>
+<h2 id="42-componente-raiz-appjs">4.2 Componente Raíz: <code>App.js</code></h2>
+<pre><code class="language-javascript">// ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN PRINCIPAL DE LA APLICACIÓN
+// ══════════════════════════════════════════════════════════════
+
+import { BrowserRouter, Routes, Route } from &quot;react-router-dom&quot;;
+import axios from &quot;axios&quot;;
+
+// Páginas
+import Home from &quot;./pages/Home&quot;;
+import Catalog from &quot;./pages/Catalog&quot;;
+import Customizer from &quot;./pages/Customizer&quot;;
+// ... más páginas
+
+// Componentes
+import Navbar from &quot;./components/Navbar&quot;;
+import Footer from &quot;./components/Footer&quot;;
+
+// Contextos (Estado Global)
+import { CartProvider } from &quot;./context/CartContext&quot;;
+import { AuthProvider } from &quot;./context/AuthContext&quot;;
+
+// Configuración de API
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+export const API = `${BACKEND_URL}/api`;
+
+export const apiClient = axios.create({
+  baseURL: API,
+  withCredentials: true,  // Enviar cookies
+});
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;AuthProvider&gt;      {/* Provee estado de autenticación */}
+        &lt;CartProvider&gt;    {/* Provee estado del carrito */}
+          &lt;div className=&quot;min-h-screen flex flex-col&quot;&gt;
+            &lt;Navbar /&gt;
+            &lt;main className=&quot;flex-1&quot;&gt;
+              &lt;Routes&gt;
+                &lt;Route path=&quot;/&quot; element={&lt;Home /&gt;} /&gt;
+                &lt;Route path=&quot;/catalogo&quot; element={&lt;Catalog /&gt;} /&gt;
+                &lt;Route path=&quot;/personalizar&quot; element={&lt;Customizer /&gt;} /&gt;
+                &lt;Route path=&quot;/carrito&quot; element={&lt;Cart /&gt;} /&gt;
+                &lt;Route path=&quot;/checkout&quot; element={&lt;Checkout /&gt;} /&gt;
+                {/* Rutas protegidas */}
+                &lt;Route path=&quot;/admin/*&quot; element={
+                  &lt;ProtectedRoute requireAdmin&gt;
+                    &lt;AdminRoutes /&gt;
+                  &lt;/ProtectedRoute&gt;
+                } /&gt;
+              &lt;/Routes&gt;
+            &lt;/main&gt;
+            &lt;Footer /&gt;
+          &lt;/div&gt;
+        &lt;/CartProvider&gt;
+      &lt;/AuthProvider&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}
+</code></pre>
+<h2 id="43-contexto-de-autenticacion-authcontextjs">4.3 Contexto de Autenticación: <code>AuthContext.js</code></h2>
+<pre><code class="language-javascript">// ══════════════════════════════════════════════════════════════
+// MANEJO DE ESTADO DE AUTENTICACIÓN
+// ══════════════════════════════════════════════════════════════
+
+import { createContext, useContext, useState, useEffect } from 'react';
+import { apiClient } from '../App';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);      // Usuario actual
+  const [loading, setLoading] = useState(true); // Cargando...
+
+  // Verificar autenticación al cargar
+  useEffect(() =&gt; {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () =&gt; {
+    try {
+      const response = await apiClient.get('/auth/me');
+      setUser(response.data);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Redirigir a Google OAuth
+  const login = () =&gt; {
+    const redirectUrl = window.location.origin + '/';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+
+  // Cerrar sesión
+  const logout = async () =&gt; {
+    await apiClient.post('/auth/logout');
+    setUser(null);
+    window.location.href = '/';
+  };
+
+  return (
+    &lt;AuthContext.Provider value={{ user, loading, login, logout }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}
+
+// Hook personalizado para usar autenticación
+export function useAuth() {
+  return useContext(AuthContext);
+}
+</code></pre>
+<h2 id="44-contexto-del-carrito-cartcontextjs">4.4 Contexto del Carrito: <code>CartContext.js</code></h2>
+<pre><code class="language-javascript">// ══════════════════════════════════════════════════════════════
+// MANEJO DE ESTADO DEL CARRITO DE COMPRAS
+// ══════════════════════════════════════════════════════════════
+
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const CartContext = createContext(null);
+
+export function CartProvider({ children }) {
+  // Cargar carrito desde localStorage
+  const [items, setItems] = useState(() =&gt; {
+    const saved = localStorage.getItem('labcel_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Guardar en localStorage cuando cambie
+  useEffect(() =&gt; {
+    localStorage.setItem('labcel_cart', JSON.stringify(items));
+  }, [items]);
+
+  // Agregar producto al carrito
+  const addItem = (item) =&gt; {
+    setItems(prev =&gt; [...prev, { ...item, id: Date.now() }]);
+  };
+
+  // Eliminar producto
+  const removeItem = (itemId) =&gt; {
+    setItems(prev =&gt; prev.filter(item =&gt; item.id !== itemId));
+  };
+
+  // Actualizar cantidad
+  const updateQuantity = (itemId, quantity) =&gt; {
+    setItems(prev =&gt; 
+      prev.map(item =&gt; 
+        item.id === itemId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  // Calcular total
+  const getTotal = () =&gt; {
+    return items.reduce((sum, item) =&gt; sum + (item.price * item.quantity), 0);
+  };
+
+  return (
+    &lt;CartContext.Provider value={{ 
+      items, addItem, removeItem, updateQuantity, getTotal, clearCart 
+    }}&gt;
+      {children}
+    &lt;/CartContext.Provider&gt;
+  );
+}
+
+export function useCart() {
+  return useContext(CartContext);
+}
+</code></pre>
+<h2 id="45-pagina-del-personalizador-customizerjs">4.5 Página del Personalizador: <code>Customizer.js</code></h2>
+<pre><code class="language-javascript">// ══════════════════════════════════════════════════════════════
+// PERSONALIZADOR DE FUNDAS CON VISTA PREVIA EN TIEMPO REAL
+// ══════════════════════════════════════════════════════════════
+
+// Configuración de cámaras por modelo
+const cameraConfigs = {
+  'model_iphone15': { type: 'dual-diagonal', count: 2 },
+  'model_iphone15pro': { type: 'triple-pro', count: 3 },
+  'model_s24': { type: 'triple-vertical', count: 3 },
+  'model_s24ultra': { type: 'quad-vertical', count: 4 },
+  // ... más modelos
+};
+
+export default function Customizer() {
+  // Estados
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
+  const [customImage, setCustomImage] = useState(null);
+  const [imageScale, setImageScale] = useState([100]);
+  const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 });
+
+  // Subir imagen personalizada
+  const handleImageUpload = async (e) =&gt; {
+    const file = e.target.files?.[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/upload/image', formData);
+    setCustomImage(response.data.url);
+  };
+
+  // Agregar al carrito
+  const handleAddToCart = () =&gt; {
+    addItem({
+      product_id: selectedProduct.product_id,
+      product_name: selectedProduct.name,
+      price: selectedProduct.price,
+      phone_brand: brandName,
+      phone_model: modelName,
+      custom_image_url: customImage,
+    });
+    navigate('/carrito');
+  };
+
+  return (
+    &lt;div className=&quot;grid lg:grid-cols-2 gap-8&quot;&gt;
+      {/* Vista previa del teléfono */}
+      &lt;div className=&quot;phone-preview&quot;&gt;
+        &lt;CameraModule config={cameraConfigs[selectedModel]} /&gt;
+        {customImage &amp;&amp; (
+          &lt;div style={{
+            backgroundImage: `url(${customImage})`,
+            backgroundSize: `${imageScale}%`,
+            backgroundPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+          }} /&gt;
+        )}
+      &lt;/div&gt;
+
+      {/* Panel de controles */}
+      &lt;div className=&quot;controls&quot;&gt;
+        &lt;Select onValueChange={setSelectedBrand}&gt;...&lt;/Select&gt;
+        &lt;Select onValueChange={setSelectedModel}&gt;...&lt;/Select&gt;
+        &lt;Button onClick={handleImageUpload}&gt;Subir Imagen&lt;/Button&gt;
+        &lt;Slider value={imageScale} onChange={setImageScale} /&gt;
+        &lt;Button onClick={handleAddToCart}&gt;Añadir al Carrito&lt;/Button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<h2 id="46-variables-de-entorno-env">4.6 Variables de Entorno: <code>.env</code></h2>
+<pre><code class="language-env"># URL del backend
+REACT_APP_BACKEND_URL=http://localhost:8001
+
+# En producción:
+# REACT_APP_BACKEND_URL=https://api.tudominio.com
+</code></pre>
+<hr />
+<h1 id="5-flujo-de-datos">5. FLUJO DE DATOS</h1>
+<h2 id="51-flujo-de-compra-completo">5.1 Flujo de Compra Completo</h2>
+<pre><code>┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   HOME      │───►│  CATÁLOGO   │───►│PERSONALIZADOR───►│  CARRITO    │
+│             │    │             │    │             │    │             │
+│ Ver ofertas │    │ Ver fundas  │    │ Subir imagen│    │ Ver items   │
+│ Navegar     │    │ Filtrar     │    │ Elegir modelo    │ Editar cant │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+                                                                │
+                                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  ENTREGADO  │◄───│   RASTREO   │◄───│ CONFIRMACIÓN│◄───│  CHECKOUT   │
+│             │    │             │    │             │    │             │
+│ Recibir     │    │ Ver estado  │    │ Ver número  │    │ Datos envío │
+│ producto    │    │ Historial   │    │ de pedido   │    │ Método pago │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+</code></pre>
+<h2 id="52-flujo-de-autenticacion-google-oauth">5.2 Flujo de Autenticación (Google OAuth)</h2>
+<pre><code>┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   USUARIO   │    │   EMERGENT  │    │   GOOGLE    │    │   BACKEND   │
+│   (React)   │    │    AUTH     │    │   OAUTH     │    │  (FastAPI)  │
+└──────┬──────┘    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
+       │                  │                  │                  │
+       │ 1. Click Login   │                  │                  │
+       │─────────────────►│                  │                  │
+       │                  │                  │                  │
+       │                  │ 2. Redirect      │                  │
+       │                  │─────────────────►│                  │
+       │                  │                  │                  │
+       │                  │                  │ 3. User Login    │
+       │                  │                  │◄────────────────►│
+       │                  │                  │                  │
+       │                  │ 4. session_id    │                  │
+       │◄─────────────────│◄─────────────────│                  │
+       │                  │                  │                  │
+       │ 5. POST /auth/session (session_id)  │                  │
+       │─────────────────────────────────────────────────────►│
+       │                  │                  │                  │
+       │ 6. User data + session_token (cookie)                 │
+       │◄─────────────────────────────────────────────────────│
+       │                  │                  │                  │
+</code></pre>
+<h2 id="53-flujo-de-datos-crear-pedido">5.3 Flujo de Datos: Crear Pedido</h2>
+<pre><code class="language-javascript">// 1. Frontend: Enviar datos del pedido
+const response = await apiClient.post('/orders', {
+  items: cartItems,
+  customer_name: &quot;Juan Pérez&quot;,
+  customer_email: &quot;juan@email.com&quot;,
+  customer_phone: &quot;1234567890&quot;,
+  shipping_address: &quot;Calle 123...&quot;,
+  payment_method: &quot;recoger_tienda&quot;
+});
+
+// 2. Backend: Procesar pedido
+@api_router.post(&quot;/orders&quot;)
+async def create_order(order_data: OrderCreate):
+    # Calcular total
+    total = sum(item.price * item.quantity for item in order_data.items)
+
+    # Crear pedido en MongoDB
+    order = Order(
+        order_id=f&quot;ORD-{date}-{uuid}&quot;,
+        items=order_data.items,
+        total=total,
+        status=&quot;pendiente&quot;
+    )
+    await db.orders.insert_one(order.model_dump())
+
+    # Notificar admins (async)
+    background_tasks.add_task(notify_admins, order)
+
+    return {&quot;order_id&quot;: order.order_id, &quot;total&quot;: total}
+
+// 3. Frontend: Mostrar confirmación
+setOrderId(response.data.order_id);
+clearCart();
+navigate(`/rastrear/${orderId}`);
+</code></pre>
+<hr />
+<h1 id="6-base-de-datos">6. BASE DE DATOS</h1>
+<h2 id="61-colecciones-mongodb">6.1 Colecciones MongoDB</h2>
+<pre><code>labcel_db/
+├── users              # Usuarios registrados
+├── user_sessions      # Sesiones activas
+├── products           # Catálogo de productos
+├── phone_brands       # Marcas de teléfonos
+├── phone_models       # Modelos de teléfonos
+├── orders             # Pedidos
+├── uploaded_images    # Imágenes subidas
+└── notifications      # Log de notificaciones
+</code></pre>
+<h2 id="62-esquemas-de-documentos">6.2 Esquemas de Documentos</h2>
+<h3 id="coleccion-users">Colección: <code>users</code></h3>
+<pre><code class="language-json">{
+  &quot;user_id&quot;: &quot;user_abc123&quot;,
+  &quot;email&quot;: &quot;usuario@email.com&quot;,
+  &quot;name&quot;: &quot;Juan Pérez&quot;,
+  &quot;picture&quot;: &quot;https://...&quot;,
+  &quot;role&quot;: &quot;customer&quot;,  // o &quot;admin&quot;
+  &quot;phone&quot;: &quot;+1234567890&quot;,
+  &quot;whatsapp_number&quot;: &quot;+1234567890&quot;,
+  &quot;created_at&quot;: &quot;2026-02-03T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="coleccion-products">Colección: <code>products</code></h3>
+<pre><code class="language-json">{
+  &quot;product_id&quot;: &quot;prod_funda_normal&quot;,
+  &quot;name&quot;: &quot;Funda Personalizada Una Pieza&quot;,
+  &quot;description&quot;: &quot;Funda para uso normal...&quot;,
+  &quot;price&quot;: 180.00,
+  &quot;category&quot;: &quot;funda&quot;,
+  &quot;base_image_url&quot;: &quot;https://...&quot;,
+  &quot;is_customizable&quot;: true,
+  &quot;is_active&quot;: true,
+  &quot;stock&quot;: 100,
+  &quot;created_at&quot;: &quot;2026-02-03T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="coleccion-orders">Colección: <code>orders</code></h3>
+<pre><code class="language-json">{
+  &quot;order_id&quot;: &quot;ORD-20260203-ABC123&quot;,
+  &quot;user_id&quot;: &quot;user_abc123&quot;,
+  &quot;items&quot;: [
+    {
+      &quot;product_id&quot;: &quot;prod_funda_normal&quot;,
+      &quot;product_name&quot;: &quot;Funda Personalizada Una Pieza&quot;,
+      &quot;quantity&quot;: 1,
+      &quot;price&quot;: 180.00,
+      &quot;phone_brand&quot;: &quot;Apple&quot;,
+      &quot;phone_model&quot;: &quot;iPhone 15 Pro&quot;,
+      &quot;custom_image_url&quot;: &quot;img_xyz789&quot;,
+      &quot;preview_image_url&quot;: &quot;data:image/jpeg;base64,...&quot;
+    }
+  ],
+  &quot;customer_name&quot;: &quot;Juan Pérez&quot;,
+  &quot;customer_email&quot;: &quot;juan@email.com&quot;,
+  &quot;customer_phone&quot;: &quot;+1234567890&quot;,
+  &quot;customer_whatsapp&quot;: &quot;+1234567890&quot;,
+  &quot;shipping_address&quot;: &quot;Calle 123, Ciudad&quot;,
+  &quot;payment_method&quot;: &quot;recoger_tienda&quot;,
+  &quot;subtotal&quot;: 180.00,
+  &quot;total&quot;: 180.00,
+  &quot;status&quot;: &quot;pendiente&quot;,
+  &quot;status_history&quot;: [
+    {
+      &quot;status&quot;: &quot;pendiente&quot;,
+      &quot;timestamp&quot;: &quot;2026-02-03T10:00:00Z&quot;,
+      &quot;notes&quot;: &quot;Pedido creado&quot;
+    }
+  ],
+  &quot;design_approved&quot;: false,
+  &quot;created_at&quot;: &quot;2026-02-03T10:00:00Z&quot;,
+  &quot;updated_at&quot;: &quot;2026-02-03T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="coleccion-phone_brands">Colección: <code>phone_brands</code></h3>
+<pre><code class="language-json">{
+  &quot;brand_id&quot;: &quot;brand_apple&quot;,
+  &quot;name&quot;: &quot;Apple&quot;,
+  &quot;logo_url&quot;: null,
+  &quot;is_active&quot;: true
+}
+</code></pre>
+<h3 id="coleccion-phone_models">Colección: <code>phone_models</code></h3>
+<pre><code class="language-json">{
+  &quot;model_id&quot;: &quot;model_iphone15pro&quot;,
+  &quot;brand_id&quot;: &quot;brand_apple&quot;,
+  &quot;name&quot;: &quot;iPhone 15 Pro&quot;,
+  &quot;image_url&quot;: null,
+  &quot;case_template_url&quot;: null,
+  &quot;is_active&quot;: true
+}
+</code></pre>
+<hr />
+<h1 id="7-autenticacion">7. AUTENTICACIÓN</h1>
+<h2 id="71-flujo-google-oauth-emergent-auth">7.1 Flujo Google OAuth (Emergent Auth)</h2>
+<ol>
+<li><strong>Usuario hace clic en "Iniciar Sesión"</strong></li>
+<li><strong>Frontend redirige a Emergent Auth:</strong>
+   <code>javascript
+   window.location.href = `https://auth.emergentagent.com/?redirect=${redirectUrl}`;</code></li>
+<li><strong>Usuario inicia sesión con Google</strong></li>
+<li><strong>Emergent Auth redirige de vuelta con <code>session_id</code>:</strong>
+   <code>https://tuapp.com/#session_id=abc123</code></li>
+<li><strong>Frontend extrae <code>session_id</code> y lo envía al backend:</strong>
+   <code>javascript
+   await apiClient.post('/auth/session', { session_id });</code></li>
+<li><strong>Backend intercambia <code>session_id</code> por datos del usuario:</strong>
+   <code>python
+   response = await httpx.get(
+       "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+       headers={"X-Session-ID": session_id}
+   )</code></li>
+<li><strong>Backend crea/actualiza usuario y retorna cookie de sesión</strong></li>
+</ol>
+<h2 id="72-proteccion-de-rutas-frontend">7.2 Protección de Rutas (Frontend)</h2>
+<pre><code class="language-javascript">// ProtectedRoute.js
+export default function ProtectedRoute({ children, requireAdmin }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return &lt;Loading /&gt;;
+
+  if (!user) {
+    return &lt;Navigate to=&quot;/&quot; /&gt;;
+  }
+
+  if (requireAdmin &amp;&amp; user.role !== 'admin') {
+    return &lt;Navigate to=&quot;/&quot; /&gt;;
+  }
+
+  return children;
+}
+
+// Uso en App.js
+&lt;Route path=&quot;/admin&quot; element={
+  &lt;ProtectedRoute requireAdmin&gt;
+    &lt;AdminDashboard /&gt;
+  &lt;/ProtectedRoute&gt;
+} /&gt;
+</code></pre>
+<h2 id="73-proteccion-de-endpoints-backend">7.3 Protección de Endpoints (Backend)</h2>
+<pre><code class="language-python"># Middleware de autenticación
+async def require_auth(request: Request) -&gt; Dict:
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail=&quot;No autenticado&quot;)
+    return user
+
+async def require_admin(request: Request) -&gt; Dict:
+    user = await require_auth(request)
+    if user.get(&quot;role&quot;) != &quot;admin&quot;:
+        raise HTTPException(status_code=403, detail=&quot;Acceso denegado&quot;)
+    return user
+
+# Uso en endpoints
+@api_router.get(&quot;/admin/stats&quot;)
+async def get_admin_stats(request: Request):
+    await require_admin(request)  # Solo admins
+    # ... código del endpoint
+</code></pre>
+<hr />
+<h1 id="8-api-endpoints">8. API ENDPOINTS</h1>
+<h2 id="81-endpoints-publicos">8.1 Endpoints Públicos</h2>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Endpoint</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/health</code></td>
+<td>Estado del servidor</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/products</code></td>
+<td>Listar productos</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/products/{id}</code></td>
+<td>Obtener producto</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/phone-brands</code></td>
+<td>Listar marcas</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/phone-models</code></td>
+<td>Listar modelos</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/orders/track/{id}</code></td>
+<td>Rastrear pedido</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/seed</code></td>
+<td>Cargar datos iniciales</td>
+</tr>
+</tbody>
+</table>
+<h2 id="82-endpoints-de-autenticacion">8.2 Endpoints de Autenticación</h2>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Endpoint</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/auth/session</code></td>
+<td>Intercambiar session_id</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/auth/me</code></td>
+<td>Obtener usuario actual</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/auth/logout</code></td>
+<td>Cerrar sesión</td>
+</tr>
+</tbody>
+</table>
+<h2 id="83-endpoints-protegidos-usuario-autenticado">8.3 Endpoints Protegidos (Usuario autenticado)</h2>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Endpoint</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/orders</code></td>
+<td>Crear pedido</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/orders</code></td>
+<td>Listar mis pedidos</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/orders/{id}</code></td>
+<td>Obtener pedido</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/upload/image</code></td>
+<td>Subir imagen</td>
+</tr>
+</tbody>
+</table>
+<h2 id="84-endpoints-de-admin">8.4 Endpoints de Admin</h2>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Endpoint</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/admin/stats</code></td>
+<td>Estadísticas</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/users</code></td>
+<td>Listar usuarios</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/users/{id}/role</code></td>
+<td>Cambiar rol</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/products</code></td>
+<td>Crear producto</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/products/{id}</code></td>
+<td>Actualizar producto</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/products/{id}</code></td>
+<td>Eliminar producto</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/orders/{id}/status</code></td>
+<td>Cambiar estado</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/orders/{id}/design-proposal</code></td>
+<td>Enviar propuesta</td>
+</tr>
+</tbody>
+</table>
+<h2 id="85-ejemplos-de-uso-curl">8.5 Ejemplos de Uso (curl)</h2>
+<pre><code class="language-bash"># Obtener productos
+curl http://localhost:8001/api/products
+
+# Crear pedido
+curl -X POST http://localhost:8001/api/orders \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{
+    &quot;items&quot;: [...],
+    &quot;customer_name&quot;: &quot;Juan&quot;,
+    &quot;customer_email&quot;: &quot;juan@email.com&quot;,
+    &quot;customer_phone&quot;: &quot;123456&quot;,
+    &quot;shipping_address&quot;: &quot;Calle 123&quot;,
+    &quot;payment_method&quot;: &quot;recoger_tienda&quot;
+  }'
+
+# Rastrear pedido
+curl http://localhost:8001/api/orders/track/ORD-20260203-ABC123
+</code></pre>
+<hr />
+<h1 id="9-componentes-ui">9. COMPONENTES UI</h1>
+<h2 id="91-componentes-shadcn-ui-utilizados">9.1 Componentes Shadcn UI Utilizados</h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Archivo</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Button</td>
+<td><code>button.jsx</code></td>
+<td>Botones en toda la app</td>
+</tr>
+<tr>
+<td>Input</td>
+<td><code>input.jsx</code></td>
+<td>Campos de texto</td>
+</tr>
+<tr>
+<td>Label</td>
+<td><code>label.jsx</code></td>
+<td>Etiquetas de formulario</td>
+</tr>
+<tr>
+<td>Select</td>
+<td><code>select.jsx</code></td>
+<td>Selectores desplegables</td>
+</tr>
+<tr>
+<td>Dialog</td>
+<td><code>dialog.jsx</code></td>
+<td>Modales/popups</td>
+</tr>
+<tr>
+<td>Sheet</td>
+<td><code>sheet.jsx</code></td>
+<td>Menú lateral móvil</td>
+</tr>
+<tr>
+<td>Dropdown</td>
+<td><code>dropdown-menu.jsx</code></td>
+<td>Menú desplegable</td>
+</tr>
+<tr>
+<td>Slider</td>
+<td><code>slider.jsx</code></td>
+<td>Control de zoom</td>
+</tr>
+<tr>
+<td>Badge</td>
+<td><code>badge.jsx</code></td>
+<td>Etiquetas de estado</td>
+</tr>
+<tr>
+<td>Table</td>
+<td><code>table.jsx</code></td>
+<td>Tablas de admin</td>
+</tr>
+<tr>
+<td>Textarea</td>
+<td><code>textarea.jsx</code></td>
+<td>Áreas de texto</td>
+</tr>
+<tr>
+<td>RadioGroup</td>
+<td><code>radio-group.jsx</code></td>
+<td>Opciones de pago</td>
+</tr>
+<tr>
+<td>Switch</td>
+<td><code>switch.jsx</code></td>
+<td>Toggle on/off</td>
+</tr>
+<tr>
+<td>Toast/Sonner</td>
+<td><code>sonner.tsx</code></td>
+<td>Notificaciones</td>
+</tr>
+</tbody>
+</table>
+<h2 id="92-componentes-personalizados">9.2 Componentes Personalizados</h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Archivo</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Navbar</td>
+<td><code>Navbar.js</code></td>
+<td>Navegación principal</td>
+</tr>
+<tr>
+<td>Footer</td>
+<td><code>Footer.js</code></td>
+<td>Pie de página</td>
+</tr>
+<tr>
+<td>AuthCallback</td>
+<td><code>AuthCallback.js</code></td>
+<td>Procesar OAuth</td>
+</tr>
+<tr>
+<td>ProtectedRoute</td>
+<td><code>ProtectedRoute.js</code></td>
+<td>Rutas protegidas</td>
+</tr>
+<tr>
+<td>AdminLayout</td>
+<td><code>AdminLayout.js</code></td>
+<td>Layout del panel admin</td>
+</tr>
+<tr>
+<td>CameraModule</td>
+<td><code>Customizer.js</code></td>
+<td>Renderizar cámaras del teléfono</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="10-despliegue">10. DESPLIEGUE</h1>
+<h2 id="101-requisitos-del-servidor">10.1 Requisitos del Servidor</h2>
+<ul>
+<li><strong>Node.js</strong> &gt;= 18.x</li>
+<li><strong>Python</strong> &gt;= 3.11</li>
+<li><strong>MongoDB</strong> &gt;= 6.0</li>
+<li><strong>RAM</strong>: Mínimo 1GB</li>
+<li><strong>Disco</strong>: Mínimo 5GB</li>
+</ul>
+<h2 id="102-variables-de-entorno-en-produccion">10.2 Variables de Entorno en Producción</h2>
+<h3 id="backend-env">Backend (<code>.env</code>)</h3>
+<pre><code class="language-env">MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true&amp;w=majority
+DB_NAME=labcel_production
+
+# Opcional: Notificaciones
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_WHATSAPP_NUMBER=...
+RESEND_API_KEY=...
+</code></pre>
+<h3 id="frontend-env">Frontend (<code>.env</code>)</h3>
+<pre><code class="language-env">REACT_APP_BACKEND_URL=https://api.labcel.com
+</code></pre>
+<h2 id="103-comandos-de-despliegue">10.3 Comandos de Despliegue</h2>
+<pre><code class="language-bash"># Backend
+cd backend
+pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8001
+
+# Frontend (build de producción)
+cd frontend
+yarn install
+yarn build
+# Servir carpeta 'build' con nginx/apache
+</code></pre>
+<h2 id="104-configuracion-nginx-ejemplo">10.4 Configuración Nginx (Ejemplo)</h2>
+<pre><code class="language-nginx"># Frontend
+server {
+    listen 80;
+    server_name labcel.com;
+    root /var/www/labcel/frontend/build;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# Backend
+server {
+    listen 80;
+    server_name api.labcel.com;
+
+    location / {
+        proxy_pass http://localhost:8001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+</code></pre>
+<hr />
+<h1 id="apendice-diagrama-de-componentes">APÉNDICE: DIAGRAMA DE COMPONENTES</h1>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                         APP.JS                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                    BrowserRouter                          │  │
+│  │  ┌─────────────────────────────────────────────────────┐  │  │
+│  │  │                 AuthProvider                        │  │  │
+│  │  │  ┌───────────────────────────────────────────────┐  │  │  │
+│  │  │  │              CartProvider                     │  │  │  │
+│  │  │  │  ┌─────────────────────────────────────────┐  │  │  │  │
+│  │  │  │  │              NAVBAR                     │  │  │  │  │
+│  │  │  │  ├─────────────────────────────────────────┤  │  │  │  │
+│  │  │  │  │              ROUTES                     │  │  │  │  │
+│  │  │  │  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐   │  │  │  │  │
+│  │  │  │  │  │ Home │ │Catalog│ │Custom│ │ Cart │   │  │  │  │  │
+│  │  │  │  │  └──────┘ └──────┘ └──────┘ └──────┘   │  │  │  │  │
+│  │  │  │  │  ┌──────┐ ┌──────┐ ┌──────┐            │  │  │  │  │
+│  │  │  │  │  │Check │ │ Track│ │Admin │            │  │  │  │  │
+│  │  │  │  │  └──────┘ └──────┘ └──────┘            │  │  │  │  │
+│  │  │  │  ├─────────────────────────────────────────┤  │  │  │  │
+│  │  │  │  │              FOOTER                     │  │  │  │  │
+│  │  │  │  └─────────────────────────────────────────┘  │  │  │  │
+│  │  │  └───────────────────────────────────────────────┘  │  │  │
+│  │  └─────────────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<p><strong>Documento generado para LABCEL San Antonio</strong>
+<strong>Versión 1.0 - Febrero 2026</strong>
+<strong>Powered by Emergent AI</strong></p>
+<hr>
+<p style="text-align:center; color:#888;">
+    <strong>LABCEL San Antonio</strong> - Guía Técnica v1.0<br>
+    Febrero 2026 | Powered by Emergent AI
+</p>
+</body>
+</html>
