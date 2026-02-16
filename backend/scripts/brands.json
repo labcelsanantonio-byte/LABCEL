@@ -1,0 +1,7 @@
+[
+  { "brand_id": "brand_apple", "name": "Apple" },
+  { "brand_id": "brand_samsung", "name": "Samsung" },
+  { "brand_id": "brand_xiaomi", "name": "Xiaomi" },
+  { "brand_id": "brand_huawei", "name": "Huawei" },
+  { "brand_id": "brand_motorola", "name": "Motorola" }
+]

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../../App';
 import AdminLayout from '../../components/AdminLayout';
 import { Button } from '../../components/ui/button';
@@ -62,11 +62,7 @@ export default function AdminOrders() {
     send_via_email: true
   });
 
-  useEffect(() => {
-    fetchOrders();
-  }, [filterStatus]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const url = filterStatus === 'all' ? '/orders' : `/orders?status=${filterStatus}`;
       const response = await apiClient.get(url);
@@ -76,7 +72,11 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
