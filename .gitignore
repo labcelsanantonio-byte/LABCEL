@@ -101,3 +101,5 @@ env/
 .venv/
 #Marcas y modelos que se insertan en mongo DB
 Modelos_y_Marcas/
+# Private deployment guide
+HOSTINGER_DEPLOYMENT_GUIDE.md

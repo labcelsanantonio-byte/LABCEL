@@ -356,12 +356,15 @@ async def exchange_session(request: Request):
     
     # Add token to response for client-side storage
     user_with_token = {**user, "session_token": session_token}
-    
+
+    # Return the user object along with the session token and set the
+    # cookie once according to environment. Previously the response was
+    # overwritten and an always-secure cookie was forced, which prevents
+    # the cookie from being set during local HTTP development.
     response = JSONResponse(content=user_with_token)
-    
-    # Configure cookie based on environment
+
     if IS_DEVELOPMENT:
-        # Development: allow HTTP, lax samesite
+        # Development: allow non-HTTPS, use lax samesite so browser accepts cookie
         response.set_cookie(
             key="session_token",
             value=session_token,
@@ -372,28 +375,17 @@ async def exchange_session(request: Request):
             max_age=7 * 24 * 60 * 60
         )
     else:
-        # Production: secure cookies over HTTPS
+        # Production: require secure HTTPS cookies and samesite=None for cross-site
         response.set_cookie(
             key="session_token",
             value=session_token,
             httponly=True,
             secure=True,
-            samesite="lax",
+            samesite="none",
             path="/",
             max_age=7 * 24 * 60 * 60
         )
-        
-    response = JSONResponse(content=user)
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        path="/",
-        max_age=7 * 24 * 60 * 60
-    )
-    
+
     return response
 
 @api_router.get("/auth/me")
