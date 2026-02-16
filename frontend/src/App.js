@@ -33,6 +33,14 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
+// Add interceptor to include token in Authorization header if available
+apiClient.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('session_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 // Cart context
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";

@@ -21,6 +21,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+#Environment configuration
+Environment = os.environ.get("ENVIRONMENT",'production')
+IS_DEVELOPMENT = Environment == 'development'
+
 # Create the main app
 app = FastAPI(title="LABCEL San Antonio API")
 
@@ -350,6 +354,35 @@ async def exchange_session(request: Request):
     # Get user data
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     
+    # Add token to response for client-side storage
+    user_with_token = {**user, "session_token": session_token}
+    
+    response = JSONResponse(content=user_with_token)
+    
+    # Configure cookie based on environment
+    if IS_DEVELOPMENT:
+        # Development: allow HTTP, lax samesite
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/",
+            max_age=7 * 24 * 60 * 60
+        )
+    else:
+        # Production: secure cookies over HTTPS
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            path="/",
+            max_age=7 * 24 * 60 * 60
+        )
+        
     response = JSONResponse(content=user)
     response.set_cookie(
         key="session_token",
@@ -929,7 +962,13 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://192.168.1.68:3000",
+        "http://192.168.1.68:8001",
+        "http://localhost:8001",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )

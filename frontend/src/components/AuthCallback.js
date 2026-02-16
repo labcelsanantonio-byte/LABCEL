@@ -33,6 +33,11 @@ export default function AuthCallback() {
           session_id: sessionId
         });
 
+         // Store token in sessionStorage for fallback
+        if (response.data.session_token) {
+          sessionStorage.setItem('session_token', response.data.session_token);
+        }
+        
         updateUser(response.data);
         toast.success(`¡Bienvenido, ${response.data.name}!`);
         
