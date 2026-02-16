@@ -1,0 +1,14 @@
+{
+  "typeCheckingMode": "basic",
+  "reportGeneralTypeIssues": false,
+  "reportOptionalMemberAccess": false,
+  "reportOptionalSubscript": false,
+  "reportPrivateImportUsage": false,
+  "reportUnusedImport": false,
+  "reportUnusedClass": false,
+  "reportUnusedFunction": false,
+  "reportUnusedVariable": false,
+  "reportMissingDocstring": false,
+  "reportMissingTypeStubs": false,
+  "reportIncompatibleMethodOverride": false
+}
