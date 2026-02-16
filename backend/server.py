@@ -438,7 +438,7 @@ async def update_user_role(user_id: str, request: Request):
 @api_router.get("/phone-brands")
 async def get_phone_brands():
     """Get all phone brands"""
-    brands = await db.phone_brands.find({"is_active": True}, {"_id": 0}).to_list(100)
+    brands = await db.phone_brands.find({}, {"_id": 0}).to_list(100)
     return brands
 
 @api_router.post("/phone-brands")
@@ -451,7 +451,7 @@ async def create_phone_brand(brand: PhoneBrand, request: Request):
 @api_router.get("/phone-models")
 async def get_phone_models(brand_id: Optional[str] = None):
     """Get phone models, optionally filtered by brand"""
-    query = {"is_active": True}
+    query = {}
     if brand_id:
         query["brand_id"] = brand_id
     models = await db.phone_models.find(query, {"_id": 0}).to_list(500)
